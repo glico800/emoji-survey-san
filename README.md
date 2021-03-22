@@ -1,0 +1,1 @@
+Sample Slack API program for surveying frequency of emoji usage.

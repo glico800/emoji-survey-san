@@ -62,6 +62,8 @@ def get_custom_emoji_names() -> list:
             print("Error: ", e.response["error"])
         except IncompleteRead as e:
             print("IncompleteRead Exception: ", e)
+        except ConnectionError as e:
+            print("ConnectionError: ", e)
         else:
             break
     else:
@@ -105,6 +107,8 @@ def get_public_channel_map() -> dict:
             print("Error: ", e.response["error"])
         except IncompleteRead as e:
             print("IncompleteRead Exception: ", e)
+        except ConnectionError as e:
+            print("ConnectionError: ", e)
         else:
             break
     else:
@@ -283,6 +287,8 @@ def get_messages(channel_name: str, contains_reply: bool = True) -> list:
             print("Error: ", e.response["error"])
         except IncompleteRead as e:
             print("IncompleteRead Exception: ", e)
+        except ConnectionError as e:
+            print("ConnectionError: ", e)
         else:
             break
     else:
@@ -329,6 +335,8 @@ def get_replies(channel_name: str, thread_ts: str) -> list:
             print("Error: ", e.response["error"])
         except IncompleteRead as e:
             print("IncompleteRead Exception: ", e)
+        except ConnectionError as e:
+            print("ConnectionError: ", e)
         else:
             break
     else:
@@ -354,6 +362,8 @@ def post_message(client: WebClient, channel_name: str, message: str) -> str:
             print("Error: ", e.response["error"])
         except IncompleteRead as e:
             print("IncompleteRead Exception: ", e)
+        except ConnectionError as e:
+            print("ConnectionError: ", e)
         else:
             break
     else:

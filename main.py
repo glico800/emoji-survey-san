@@ -289,6 +289,8 @@ def get_messages(channel_name: str, contains_reply: bool = True) -> list:
             print("IncompleteRead Exception: ", e)
         except ConnectionError as e:
             print("ConnectionError: ", e)
+        except:
+            print("Unexpected Error")
         else:
             break
     else:
@@ -337,6 +339,8 @@ def get_replies(channel_name: str, thread_ts: str) -> list:
             print("IncompleteRead Exception: ", e)
         except ConnectionError as e:
             print("ConnectionError: ", e)
+        except:
+            print("Unexpected Error")
         else:
             break
     else:

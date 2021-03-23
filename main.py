@@ -30,10 +30,15 @@ public_channel_map = None
 custom_emoji_names = None
 
 
+def debug_print(message):
+    if DEBUG_MODE:
+        print(f'DEBUG: {message}')
+
+
 def get_custom_emoji_names():
-    DEBUG_MODE and print('DEBUG: start getting custom emoji names...')
+    debug_print('start getting custom emoji names...')
     if custom_emoji_names is not None:
-        DEBUG_MODE and print('DEBUG: already have custom emoji.')
+        debug_print('already have custom emoji.')
         return custom_emoji_names
 
     for _ in range(RETRY):
@@ -49,14 +54,14 @@ def get_custom_emoji_names():
         print('Failed to get custom emoji list.')
         return None
 
-    DEBUG_MODE and print('DEBUG: end getting custom emoji names.')
+    debug_print('end getting custom emoji names.')
     return list(response['emoji'].keys())
 
 
 def get_public_channel_map():
-    DEBUG_MODE and print('DEBUG: start getting public channel map...')
+    debug_print('start getting public channel map...')
     if public_channel_map is not None:
-        DEBUG_MODE and print('DEBUG: already have public channel map.')
+        debug_print('already have public channel map.')
         return public_channel_map
 
     channel_ids = {}
@@ -85,7 +90,7 @@ def get_public_channel_map():
         print('Failed to get public channel list.')
         return None
 
-    DEBUG_MODE and print('DEBUG: end getting public channel map.')
+    debug_print('end getting public channel map.')
     return channel_ids
 
 
@@ -95,7 +100,7 @@ def get_public_channel_id_by_name(channel_name):
 
 
 def get_emoji_count(channel_name):
-    DEBUG_MODE and print('DEBUG: start counting in {}...'.format(channel_name))
+    debug_print(f'start counting in {channel_name}...')
 
     result = {}
     messages = get_messages(channel_name)
@@ -122,7 +127,7 @@ def get_emoji_count(channel_name):
             total = emoji_count + result.get(emoji_name, 0)
             result.update({emoji_name: total})
 
-    DEBUG_MODE and print('DEBUG: end counting.')
+    debug_print('end counting.')
     return result
 
 
@@ -134,8 +139,8 @@ def get_emoji_count_in_all_public_channel():
         name for name in channel_map.keys() if not name.startswith(EXCLUDE_CHANNEL_PATTERN)
     ]
     for index, channel_name in enumerate(channel_names):
-        print('surveying in {} ({}/{})...'.format(channel_name,
-              index + 1, len(channel_names)))
+        print(
+            f'surveying in {channel_name} ({index + 1}/{len(channel_names)})...')
         sub_result = get_emoji_count(channel_name)
         if sub_result is None:
             print('Failed to get emoji count in all channel.')
@@ -148,7 +153,7 @@ def get_emoji_count_in_all_public_channel():
 
 
 def get_custom_emoji_count(channel_name):
-    DEBUG_MODE and print('DEBUG: start counting in {}...'.format(channel_name))
+    debug_print(f'start counting in {channel_name}...')
 
     custom_emoji_names = get_custom_emoji_names()
 
@@ -179,7 +184,7 @@ def get_custom_emoji_count(channel_name):
                 total = emoji_count + result.get(emoji_name, 0)
                 result.update({emoji_name: total})
 
-    DEBUG_MODE and print('DEBUG: end counting.')
+    debug_print('end counting.')
     return result
 
 
@@ -191,8 +196,8 @@ def get_custom_emoji_count_in_all_public_channel():
         name for name in channel_map.keys() if not name.startswith(EXCLUDE_CHANNEL_PATTERN)
     ]
     for index, channel_name in enumerate(channel_names):
-        print('surveying in {} ({}/{})...'.format(channel_name,
-              index + 1, len(channel_names)))
+        print(
+            f'surveying in {channel_name} ({index + 1}/{len(channel_names)})...')
         sub_result = get_custom_emoji_count(channel_name)
         if sub_result is None:
             print('Failed to get custom emoji count in all channel.')
@@ -205,12 +210,11 @@ def get_custom_emoji_count_in_all_public_channel():
 
 
 def get_messages(channel_name, contains_reply=True):
-    DEBUG_MODE and print(
-        'DEBUG: start getting messages in {}...'.format(channel_name))
+    debug_print(f'start getting messages in {channel_name}...')
 
     channel_id = get_public_channel_id_by_name(channel_name)
 
-    DEBUG_MODE and print('DEBUG: channel_id is {}'.format(channel_id))
+    debug_print(f'channel_id is {channel_id}')
 
     result = []
     for _ in range(RETRY):
@@ -219,9 +223,8 @@ def get_messages(channel_name, contains_reply=True):
             while True:
                 response = client.conversations_history(
                     channel=channel_id, limit=MESSAGE_LIMIT, cursor=cursor, latest=LATEST.timestamp(), oldest=OLDEST.timestamp())
-                print(
-                    ' -> {} messages fetched.'.format(len(response['messages'])))
-                DEBUG_MODE and print('DEBUG: {}'.format(response))
+                print(f' -> {len(response["messages"])} messages fetched.')
+                debug_print(f'response: {response}')
 
                 messages = response['messages']
                 result.extend(messages)
@@ -253,15 +256,15 @@ def get_messages(channel_name, contains_reply=True):
         else:
             break
     else:
-        print('Failed to get messages in {}.'.format(channel_name))
+        print(f'Failed to get messages in {channel_name}.')
         return None
 
-    DEBUG_MODE and print('DEBUG: end getting messages.')
+    debug_print('end getting messages.')
     return result
 
 
 def get_replies(channel_name, thread_ts):
-    DEBUG_MODE and print('DEBUG: start getting replies...')
+    debug_print('start getting replies...')
 
     channel_id = get_public_channel_id_by_name(channel_name)
 
@@ -272,9 +275,8 @@ def get_replies(channel_name, thread_ts):
             while True:
                 response = client.conversations_replies(
                     channel=channel_id, ts=thread_ts, limit=MESSAGE_LIMIT, cursor=cursor, latest=LATEST.timestamp(), oldest=OLDEST.timestamp())
-                print(
-                    ' ---> {} replies fetched.'.format(len(response['messages'])))
-                DEBUG_MODE and print('DEBUG: {}'.format(response))
+                print(f' ---> {len(response["messages"])} replies fetched.')
+                debug_print(f'response: {response}')
 
                 replies = [message for message in response['messages']
                            if message['ts'] != thread_ts]
@@ -295,20 +297,19 @@ def get_replies(channel_name, thread_ts):
         else:
             break
     else:
-        print('Failed to get replies in {}.'.format(channel_name))
+        print(f'Failed to get replies in {channel_name}.')
         return None
 
-    DEBUG_MODE and print('DEBUG: end getting replies.')
+    debug_print('end getting replies.')
     return result
 
 
 def post_message(client, channel_name, message):
     channel = channel_name if channel_name.startswith(
-        '#') else '#{}'.format(channel_name)
+        '#') else f'#{channel_name}'
 
     if DEBUG_MODE:
-        print('DEBUG: following message was posted to {}:\n {}'.format(
-            channel_name, message))
+        debug_print(f'post message to {channel_name}:\n {message}')
         return 'debug mode'
 
     for _ in range(RETRY):
@@ -321,18 +322,18 @@ def post_message(client, channel_name, message):
         else:
             break
     else:
-        print('Failed to post message to {}: {}'.format(channel, message))
+        print(f'Failed to post message to {channel}: {message}')
         return 'failed'
 
-    print('succeeded to post following message to {}\n{}\n--------\n\n'.format(
-        channel_name, message[:1000]))
+    print(
+        f'succeeded to post following message to {channel_name}\n{message[:1000]}\n--------\n\n')
     return 'succeeded'
 
 
 def get_top_emoji_count(emoji_count, limit=10):
     sorted_count = sorted(emoji_count.items(),
                           key=lambda x: x[1], reverse=True)[:limit]
-    DEBUG_MODE and print(sorted_count)
+    debug_print(f'sorted_count: {sorted_count}')
 
     return sorted_count
 
@@ -341,9 +342,9 @@ def get_post_message_by_sorted_count(sorted_count):
     message = ''
 
     for emoji_name, count in sorted_count:
-        message += '> :{}: : {}回\n'.format(emoji_name, count)
+        message += f'> :{emoji_name}: : {count}回\n'
 
-    DEBUG_MODE and print('DEBUG: return message: {}'.format(message))
+    debug_print(f'return message: {message}')
     return message
 
 
@@ -357,7 +358,7 @@ def get_unused_custom_emojis(emoji_count, limit=3):
         result[i] = [custom_emoji_name for custom_emoji_name,
                      count in all_custom_emoji_count.items() if count == i]
 
-    DEBUG_MODE and print(result)
+    debug_print(f'unused_custom_emojis: {result}')
     return result
 
 
@@ -365,9 +366,9 @@ def get_post_message_by_unused_custom_emojis(unused_custom_emojis):
     message = ''
 
     for count, emoji_names in unused_custom_emojis.items():
-        message += '*{}回*/n/n :{}:\n'.format(count, ': :'.join(emoji_names))
+        message += f'*{count}回*/n/n :{": :".join(emoji_names)}:\n'
 
-    DEBUG_MODE and print('DEBUG: return message: {}'.format(message))
+    debug_print(f'return message: {message}')
     return message
 
 
@@ -460,18 +461,17 @@ if result is None:
 # message header
 message_header = ''
 if ranking_type == 'top':
-    message_header += '*Emojiランキング* Top {}\n\n'.format(ranking_limit)
+    message_header += f'*Emojiランキング* Top {ranking_limit}\n\n'
 else:
-    message_header += '*使っていないEmojiランキング* Under {}\n\n'.format(ranking_limit)
+    message_header += f'*使っていないEmojiランキング* Under {ranking_limit}\n\n'
 message_header += '集計範囲： '
 if target_channel == '':
     message_header += 'すべてのパブリックチャンネル（log系チャンネルを除く）\n'
 else:
-    message_header += '<#{}>\n'.format(public_channel_map[target_channel])
+    message_header += f'<#{public_channel_map[target_channel]}>\n'
 message_header += '集計対象： '
 message_header += 'カスタムEmojiのみ\n' if emoji_type == 'custom' or ranking_type == 'unused' else 'すべてのEmoji\n'
-message_header += '集計期間： {} ~ {}\n'.format(
-    OLDEST.strftime(DATE_FORMAT), LATEST.strftime(DATE_FORMAT))
+message_header += f'集計期間： {OLDEST.strftime(DATE_FORMAT)} ~ {LATEST.strftime(DATE_FORMAT)}\n'
 message_header += '\n'
 
 # sort and create message
@@ -487,6 +487,6 @@ else:
     message = message_header + \
         get_post_message_by_unused_custom_emojis(unused_custom_emojis)
     # Don't post to slack cause unused ranking message is too log to post
-    print('--------\n\n{}\n\n--------'.format(message))
+    print(f'--------\n\n{message}\n\n--------')
 
 print('\nend surveying.\n')

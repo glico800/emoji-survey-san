@@ -70,9 +70,13 @@ def get_public_channel_map() -> dict:
             cursor = None
             while True:
                 response = client.conversations_list(
-                    exclude_archived=True, limit=1000, cursor=cursor)
+                    exclude_archived=True,
+                    limit=1000,
+                    cursor=cursor
+                )
                 channel_ids.update(
-                    {channel["name"]: channel["id"] for channel in response["channels"]})
+                    {channel["name"]: channel["id"] for channel in response["channels"]}  # noqa: E501
+                )
 
                 has_more = response["has_more"]
                 if has_more:
@@ -140,7 +144,8 @@ def get_emoji_count_in_all_public_channel() -> dict:
     ]
     for index, channel_name in enumerate(channel_names):
         print(
-            f"surveying in {channel_name} ({index + 1}/{len(channel_names)})...")
+            f"surveying in {channel_name} ({index + 1}/{len(channel_names)})..."
+        )
         sub_result = get_emoji_count(channel_name)
         if sub_result is None:
             print("Failed to get emoji count in all channel.")
@@ -197,7 +202,8 @@ def get_custom_emoji_count_in_all_public_channel() -> dict:
     ]
     for index, channel_name in enumerate(channel_names):
         print(
-            f"surveying in {channel_name} ({index + 1}/{len(channel_names)})...")
+            f"surveying in {channel_name} ({index + 1}/{len(channel_names)})..."
+        )
         sub_result = get_custom_emoji_count(channel_name)
         if sub_result is None:
             print("Failed to get custom emoji count in all channel.")
@@ -222,7 +228,12 @@ def get_messages(channel_name: str, contains_reply: bool = True) -> list:
             cursor = None
             while True:
                 response = client.conversations_history(
-                    channel=channel_id, limit=MESSAGE_LIMIT, cursor=cursor, latest=LATEST.timestamp(), oldest=OLDEST.timestamp())
+                    channel=channel_id,
+                    limit=MESSAGE_LIMIT,
+                    cursor=cursor,
+                    latest=LATEST.timestamp(),
+                    oldest=OLDEST.timestamp()
+                )
                 print(f" -> {len(response['messages'])} messages fetched.")
                 debug_print(f"response: {response}")
 
@@ -238,7 +249,8 @@ def get_messages(channel_name: str, contains_reply: bool = True) -> list:
                         replies = get_replies(channel_name, thread_ts)
                         if replies is None:
                             raise SlackApiError(
-                                f"Failed to get replies. {channel_name}, {thread_ts}")
+                                f"Failed to get replies. {channel_name}, {thread_ts}"
+                            )
                         result.extend(replies)
 
                 has_more = response["has_more"]
@@ -274,12 +286,17 @@ def get_replies(channel_name: str, thread_ts: str) -> list:
             cursor = None
             while True:
                 response = client.conversations_replies(
-                    channel=channel_id, ts=thread_ts, limit=MESSAGE_LIMIT, cursor=cursor, latest=LATEST.timestamp(), oldest=OLDEST.timestamp())
+                    channel=channel_id,
+                    ts=thread_ts,
+                    limit=MESSAGE_LIMIT,
+                    cursor=cursor,
+                    latest=LATEST.timestamp(),
+                    oldest=OLDEST.timestamp()
+                )
                 print(f" ---> {len(response['messages'])} replies fetched.")
                 debug_print(f"response: {response}")
 
-                replies = [message for message in response["messages"]
-                           if message["ts"] != thread_ts]
+                replies = [message for message in response["messages"] if message["ts"] != thread_ts]  # noqa: E501
                 result.extend(replies)
 
                 has_more = response["has_more"]
@@ -331,8 +348,11 @@ def post_message(client: WebClient, channel_name: str, message: str) -> str:
 
 
 def get_top_emoji_count(emoji_count: dict, limit: int = 10) -> list:
-    sorted_count = sorted(emoji_count.items(),
-                          key=lambda x: x[1], reverse=True)[:limit]
+    sorted_count = sorted(
+        emoji_count.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )[:limit]
     debug_print(f"sorted_count: {sorted_count}")
 
     return sorted_count
@@ -351,12 +371,10 @@ def get_post_message_by_sorted_count(sorted_count: list) -> str:
 def get_unused_custom_emojis(emoji_count: dict, limit: int = 3) -> dict:
     result = {}
 
-    custom_emoji_names = get_custom_emoji_names()
-    all_custom_emoji_count = {custom_emoji_name: emoji_count.get(
-        custom_emoji_name, 0) for custom_emoji_name in custom_emoji_names}
+    names = get_custom_emoji_names()
+    all_count = {name: emoji_count.get(name, 0) for name in names}
     for i in range(limit + 1):
-        result[i] = [custom_emoji_name for custom_emoji_name,
-                     count in all_custom_emoji_count.items() if count == i]
+        result[i] = [name for name, count in all_count.items() if count == i]
 
     debug_print(f"unused_custom_emojis: {result}")
     return result
@@ -404,20 +422,16 @@ def main() -> None:
 
     while True:
         if ranking_type == "top":
-            target_channel = input(
-                "Channel name to survey (default: all channel): ")
+            target_channel = input("Channel name to survey (default: all channel): ")  # noqa: E501
         else:
-            confirm_reccomended = input(
-                "Surveying all channel is reccomended for unused ranking. Are you sure? [Y/n]: ")
+            confirm_reccomended = input("Surveying all channel is reccomended for unused ranking. Are you sure? [Y/n]: ")  # noqa: E501
             if confirm_reccomended == "n":
-                target_channel = input(
-                    "Channel name to survey (default: all channel): ")
+                target_channel = input("Channel name to survey (default: all channel): ")  # noqa: E501
             else:
                 target_channel = ""
 
         if ranking_type == "top" and target_channel == "":
-            confirm = input(
-                "It takes long time to survey all channels. Continue? [y/N]: ")
+            confirm = input("It takes long time to survey all channels. Continue? [y/N]: ")  # noqa: E501
             if confirm != "y":
                 continue
             else:
@@ -435,11 +449,9 @@ def main() -> None:
                 continue
             break
         while True:
-            emoji_type = input(
-                "Choose emoji type [custom/all] (default: all): ")
+            emoji_type = input("Choose emoji type [custom/all] (default: all): ")  # noqa: E501
             if emoji_type not in ["", "custom", "all"]:
-                print(
-                    "Error: invalid emoji type. Choose [custom/all]. Try again.")
+                print("Error: invalid emoji type. Choose [custom/all]. Try again.")  # noqa: E501
                 continue
             break
     else:
@@ -451,11 +463,15 @@ def main() -> None:
     print("\nstart surveying...\n")
 
     if target_channel == "":
-        result = get_custom_emoji_count_in_all_public_channel(
-        ) if emoji_type == "custom" else get_emoji_count_in_all_public_channel()
+        if emoji_type == "custom":
+            result = get_custom_emoji_count_in_all_public_channel()
+        else:
+            result = get_emoji_count_in_all_public_channel()
     else:
-        result = get_custom_emoji_count(
-            target_channel) if emoji_type == "custom" else get_emoji_count(target_channel)
+        if emoji_type == "custom":
+            get_custom_emoji_count(target_channel)
+        else:
+            get_emoji_count(target_channel)
 
     if result is None:
         print("Failed to get count result.")
@@ -489,8 +505,9 @@ def main() -> None:
         # post_message(client, post_channel_name, message)
     else:
         unused_custom_emojis = get_unused_custom_emojis(result, ranking_limit)
-        message = message_header + \
-            get_post_message_by_unused_custom_emojis(unused_custom_emojis)
+        message = message_header + get_post_message_by_unused_custom_emojis(
+            unused_custom_emojis
+        )
         # Don't post to slack cause unused ranking message is too log to post
         print(f"--------\n\n{message}\n\n--------")
 

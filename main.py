@@ -30,12 +30,12 @@ public_channel_map = None
 custom_emoji_names = None
 
 
-def debug_print(message):
+def debug_print(message: str) -> None:
     if DEBUG_MODE:
         print(f"DEBUG: {message}")
 
 
-def get_custom_emoji_names():
+def get_custom_emoji_names() -> list:
     debug_print("start getting custom emoji names...")
     if custom_emoji_names is not None:
         debug_print("already have custom emoji.")
@@ -58,7 +58,7 @@ def get_custom_emoji_names():
     return list(response["emoji"].keys())
 
 
-def get_public_channel_map():
+def get_public_channel_map() -> dict:
     debug_print("start getting public channel map...")
     if public_channel_map is not None:
         debug_print("already have public channel map.")
@@ -94,12 +94,12 @@ def get_public_channel_map():
     return channel_ids
 
 
-def get_public_channel_id_by_name(channel_name):
+def get_public_channel_id_by_name(channel_name: str) -> str:
     channel_map = get_public_channel_map()
     return channel_map.get(channel_name, "") if channel_map else None
 
 
-def get_emoji_count(channel_name):
+def get_emoji_count(channel_name: str) -> dict:
     debug_print(f"start counting in {channel_name}...")
 
     result = {}
@@ -131,7 +131,7 @@ def get_emoji_count(channel_name):
     return result
 
 
-def get_emoji_count_in_all_public_channel():
+def get_emoji_count_in_all_public_channel() -> dict:
     channel_map = get_public_channel_map()
 
     result = {}
@@ -152,7 +152,7 @@ def get_emoji_count_in_all_public_channel():
     return result
 
 
-def get_custom_emoji_count(channel_name):
+def get_custom_emoji_count(channel_name: str) -> dict:
     debug_print(f"start counting in {channel_name}...")
 
     custom_emoji_names = get_custom_emoji_names()
@@ -188,7 +188,7 @@ def get_custom_emoji_count(channel_name):
     return result
 
 
-def get_custom_emoji_count_in_all_public_channel():
+def get_custom_emoji_count_in_all_public_channel() -> dict:
     channel_map = get_public_channel_map()
 
     result = {}
@@ -209,7 +209,7 @@ def get_custom_emoji_count_in_all_public_channel():
     return result
 
 
-def get_messages(channel_name, contains_reply=True):
+def get_messages(channel_name: str, contains_reply: bool = True) -> list:
     debug_print(f"start getting messages in {channel_name}...")
 
     channel_id = get_public_channel_id_by_name(channel_name)
@@ -263,7 +263,7 @@ def get_messages(channel_name, contains_reply=True):
     return result
 
 
-def get_replies(channel_name, thread_ts):
+def get_replies(channel_name: str, thread_ts: str) -> list:
     debug_print("start getting replies...")
 
     channel_id = get_public_channel_id_by_name(channel_name)
@@ -304,7 +304,7 @@ def get_replies(channel_name, thread_ts):
     return result
 
 
-def post_message(client, channel_name, message):
+def post_message(client: WebClient, channel_name: str, message: str) -> str:
     channel = channel_name if channel_name.startswith(
         "#") else f"#{channel_name}"
 
@@ -330,7 +330,7 @@ def post_message(client, channel_name, message):
     return "succeeded"
 
 
-def get_top_emoji_count(emoji_count, limit=10):
+def get_top_emoji_count(emoji_count: dict, limit: int = 10) -> list:
     sorted_count = sorted(emoji_count.items(),
                           key=lambda x: x[1], reverse=True)[:limit]
     debug_print(f"sorted_count: {sorted_count}")
@@ -338,7 +338,7 @@ def get_top_emoji_count(emoji_count, limit=10):
     return sorted_count
 
 
-def get_post_message_by_sorted_count(sorted_count):
+def get_post_message_by_sorted_count(sorted_count: list) -> str:
     message = ""
 
     for emoji_name, count in sorted_count:
@@ -348,7 +348,7 @@ def get_post_message_by_sorted_count(sorted_count):
     return message
 
 
-def get_unused_custom_emojis(emoji_count, limit=3):
+def get_unused_custom_emojis(emoji_count: dict, limit: int = 3) -> dict:
     result = {}
 
     custom_emoji_names = get_custom_emoji_names()
@@ -362,7 +362,7 @@ def get_unused_custom_emojis(emoji_count, limit=3):
     return result
 
 
-def get_post_message_by_unused_custom_emojis(unused_custom_emojis):
+def get_post_message_by_unused_custom_emojis(unused_custom_emojis: dict) -> str:
     message = ""
 
     for count, emoji_names in unused_custom_emojis.items():

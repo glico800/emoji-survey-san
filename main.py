@@ -373,121 +373,129 @@ def get_post_message_by_unused_custom_emojis(unused_custom_emojis: dict) -> str:
     return message
 
 
-# main
-# inputs
-token = input("User OAuth Token: ")
-client = WebClient(token=token)
-bot_token = input("Bot User OAuth Token: ")
-bot_client = WebClient(token=bot_token)
+def main() -> None:
+    # inputs
+    token = input("User OAuth Token: ")
+    client = WebClient(token=token)
+    bot_token = input("Bot User OAuth Token: ")
+    bot_client = WebClient(token=bot_token)
 
-public_channel_map = get_public_channel_map()
-if public_channel_map is None:
-    sys.exit(1)
+    public_channel_map = get_public_channel_map()
+    if public_channel_map is None:
+        sys.exit(1)
 
-while True:
-    ranking_type = input("Choose ranking type [top/unused]: ")
-    if ranking_type not in ["top", "unused"]:
-        print("Invalid ranking type. Try again.")
-        continue
-    if ranking_type == "top":
-        ranking_limit = input("Choose ranking limit (default: 10): ")
-    else:
-        ranking_limit = input("Choose ranking limit (default: 0): ")
-    if ranking_limit != "" and not ranking_limit.isnumeric():
-        print("Invalid ranking limit. Need to input number. Try again.")
-        continue
-    else:
-        default_limit = 10 if ranking_type == "top" else 0
-        ranking_limit = int(ranking_limit or default_limit)
+    while True:
+        ranking_type = input("Choose ranking type [top/unused]: ")
+        if ranking_type not in ["top", "unused"]:
+            print("Invalid ranking type. Try again.")
+            continue
+        if ranking_type == "top":
+            ranking_limit = input("Choose ranking limit (default: 10): ")
+        else:
+            ranking_limit = input("Choose ranking limit (default: 0): ")
+        if ranking_limit != "" and not ranking_limit.isnumeric():
+            print("Invalid ranking limit. Need to input number. Try again.")
+            continue
+        else:
+            default_limit = 10 if ranking_type == "top" else 0
+            ranking_limit = int(ranking_limit or default_limit)
 
-    break
+        break
 
-while True:
-    if ranking_type == "top":
-        target_channel = input(
-            "Channel name to survey (default: all channel): ")
-    else:
-        confirm_reccomended = input(
-            "Surveying all channel is reccomended for unused ranking. Are you sure? [Y/n]: ")
-        if confirm_reccomended == "n":
+    while True:
+        if ranking_type == "top":
             target_channel = input(
                 "Channel name to survey (default: all channel): ")
         else:
-            target_channel = ""
+            confirm_reccomended = input(
+                "Surveying all channel is reccomended for unused ranking. Are you sure? [Y/n]: ")
+            if confirm_reccomended == "n":
+                target_channel = input(
+                    "Channel name to survey (default: all channel): ")
+            else:
+                target_channel = ""
 
-    if ranking_type == "top" and target_channel == "":
-        confirm = input(
-            "It takes long time to survey all channels. Continue? [y/N]: ")
-        if confirm != "y":
-            continue
-        else:
-            print("continue.")
-    if target_channel != "" and target_channel not in public_channel_map.keys():
-        print("Error: invalid channel name. Try again.")
-        continue
-    break
-
-if ranking_type == "top":
-    while True:
-        post_channel_name = input("Channel name to post message: ")
-        if post_channel_name not in public_channel_map.keys():
+        if ranking_type == "top" and target_channel == "":
+            confirm = input(
+                "It takes long time to survey all channels. Continue? [y/N]: ")
+            if confirm != "y":
+                continue
+            else:
+                print("continue.")
+        if target_channel != "" and target_channel not in public_channel_map.keys():
             print("Error: invalid channel name. Try again.")
             continue
         break
-    while True:
-        emoji_type = input("Choose emoji type [custom/all] (default: all): ")
-        if emoji_type not in ["", "custom", "all"]:
-            print("Error: invalid emoji type. Choose [custom/all]. Try again.")
-            continue
-        break
-else:
-    # Don't post to slack cause unused ranking message is too log to post
-    post_channel_name = ""
-    # Only custom is available for unused ranking
-    emoji_type = "custom"
 
-print("\nstart surveying...\n")
+    if ranking_type == "top":
+        while True:
+            post_channel_name = input("Channel name to post message: ")
+            if post_channel_name not in public_channel_map.keys():
+                print("Error: invalid channel name. Try again.")
+                continue
+            break
+        while True:
+            emoji_type = input(
+                "Choose emoji type [custom/all] (default: all): ")
+            if emoji_type not in ["", "custom", "all"]:
+                print(
+                    "Error: invalid emoji type. Choose [custom/all]. Try again.")
+                continue
+            break
+    else:
+        # Don't post to slack cause unused ranking message is too log to post
+        post_channel_name = ""
+        # Only custom is available for unused ranking
+        emoji_type = "custom"
 
-if target_channel == "":
-    result = get_custom_emoji_count_in_all_public_channel(
-    ) if emoji_type == "custom" else get_emoji_count_in_all_public_channel()
-else:
-    result = get_custom_emoji_count(
-        target_channel) if emoji_type == "custom" else get_emoji_count(target_channel)
+    print("\nstart surveying...\n")
 
-if result is None:
-    print("Failed to get count result.")
-    sys.exit(1)
+    if target_channel == "":
+        result = get_custom_emoji_count_in_all_public_channel(
+        ) if emoji_type == "custom" else get_emoji_count_in_all_public_channel()
+    else:
+        result = get_custom_emoji_count(
+            target_channel) if emoji_type == "custom" else get_emoji_count(target_channel)
 
-# message header
-message_header = ""
-if ranking_type == "top":
-    message_header += f"*Emojiランキング* Top {ranking_limit}\n\n"
-else:
-    message_header += f"*使っていないEmojiランキング* Under {ranking_limit}\n\n"
-message_header += "集計範囲： "
-if target_channel == "":
-    message_header += "すべてのパブリックチャンネル（log系チャンネルを除く）\n"
-else:
-    message_header += f"<#{public_channel_map[target_channel]}>\n"
-message_header += "集計対象： "
-message_header += "カスタムEmojiのみ\n" if emoji_type == "custom" or ranking_type == "unused" else "すべてのEmoji\n"
-message_header += f"集計期間： {OLDEST.strftime(DATE_FORMAT)} ~ {LATEST.strftime(DATE_FORMAT)}\n"
-message_header += "\n"
+    if result is None:
+        print("Failed to get count result.")
+        sys.exit(1)
 
-# sort and create message
-if ranking_type == "top":
-    sorted_result = get_top_emoji_count(result, ranking_limit)
-    message = message_header + get_post_message_by_sorted_count(sorted_result)
-    post_message(bot_client, post_channel_name, message)
+    # message header
+    message_header = ""
+    if ranking_type == "top":
+        message_header += f"*Emojiランキング* Top {ranking_limit}\n\n"
+    else:
+        message_header += f"*使っていないEmojiランキング* Under {ranking_limit}\n\n"
+    message_header += "集計範囲： "
+    if target_channel == "":
+        message_header += "すべてのパブリックチャンネル（log系チャンネルを除く）\n"
+    else:
+        message_header += f"<#{public_channel_map[target_channel]}>\n"
+    message_header += "集計対象： "
+    message_header += "カスタムEmojiのみ\n" if emoji_type == "custom" or ranking_type == "unused" else "すべてのEmoji\n"
+    message_header += f"集計期間： {OLDEST.strftime(DATE_FORMAT)} ~ {LATEST.strftime(DATE_FORMAT)}\n"
+    message_header += "\n"
 
-    # post deletable message
-    # post_message(client, post_channel_name, message)
-else:
-    unused_custom_emojis = get_unused_custom_emojis(result, ranking_limit)
-    message = message_header + \
-        get_post_message_by_unused_custom_emojis(unused_custom_emojis)
-    # Don't post to slack cause unused ranking message is too log to post
-    print(f"--------\n\n{message}\n\n--------")
+    # sort and create message
+    if ranking_type == "top":
+        sorted_result = get_top_emoji_count(result, ranking_limit)
+        message = message_header + get_post_message_by_sorted_count(
+            sorted_result
+        )
+        post_message(bot_client, post_channel_name, message)
 
-print("\nend surveying.\n")
+        # post deletable message
+        # post_message(client, post_channel_name, message)
+    else:
+        unused_custom_emojis = get_unused_custom_emojis(result, ranking_limit)
+        message = message_header + \
+            get_post_message_by_unused_custom_emojis(unused_custom_emojis)
+        # Don't post to slack cause unused ranking message is too log to post
+        print(f"--------\n\n{message}\n\n--------")
+
+    print("\nend surveying.\n")
+
+
+if __name__ == "__main__":
+    main()

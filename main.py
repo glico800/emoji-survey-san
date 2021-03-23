@@ -487,9 +487,9 @@ def main() -> None:
             result = get_emoji_count_in_all_public_channel()
     else:
         if emoji_type == "custom":
-            get_custom_emoji_count(target_channel)
+            result = get_custom_emoji_count(target_channel)
         else:
-            get_emoji_count(target_channel)
+            result = get_emoji_count(target_channel)
 
     if result is None:
         print("Failed to get count result.")
@@ -526,7 +526,7 @@ def main() -> None:
         message = message_header + get_post_message_by_unused_custom_emojis(
             unused_custom_emojis
         )
-        # Don't post to slack cause unused ranking message is too log to post
+        # Don't post to slack cause unused ranking has too long message
         print(f"--------\n\n{message}\n\n--------")
 
     print("\nend surveying.\n")

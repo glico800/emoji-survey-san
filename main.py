@@ -26,6 +26,7 @@ LATEST = datetime.now()
 OLDEST = LATEST - relativedelta.relativedelta(years=1)
 DATE_FORMAT = "%Y/%m/%d %H:%M:%S"
 
+client = None
 public_channel_map = None
 custom_emoji_names = None
 
@@ -35,7 +36,20 @@ def debug_print(message: str) -> None:
         print(f"DEBUG: {message}")
 
 
+def init_web_client(token: str) -> WebClient:
+    global client
+
+    if client is not None:
+        debug_print("already have web client.")
+        return client
+
+    client = WebClient(token=token)
+    return client
+
+
 def get_custom_emoji_names() -> list:
+    global custom_emoji_names
+
     debug_print("start getting custom emoji names...")
     if custom_emoji_names is not None:
         debug_print("already have custom emoji.")
@@ -55,16 +69,19 @@ def get_custom_emoji_names() -> list:
         return None
 
     debug_print("end getting custom emoji names.")
-    return list(response["emoji"].keys())
+    custom_emoji_names = list(response["emoji"].keys())
+    return custom_emoji_names
 
 
 def get_public_channel_map() -> dict:
+    global public_channel_map
+
     debug_print("start getting public channel map...")
     if public_channel_map is not None:
         debug_print("already have public channel map.")
         return public_channel_map
 
-    channel_ids = {}
+    channel_map = {}
     for _ in range(RETRY):
         try:
             cursor = None
@@ -74,7 +91,7 @@ def get_public_channel_map() -> dict:
                     limit=1000,
                     cursor=cursor
                 )
-                channel_ids.update(
+                channel_map.update(
                     {channel["name"]: channel["id"] for channel in response["channels"]}  # noqa: E501
                 )
 
@@ -95,7 +112,8 @@ def get_public_channel_map() -> dict:
         return None
 
     debug_print("end getting public channel map.")
-    return channel_ids
+    public_channel_map = channel_map
+    return public_channel_map
 
 
 def get_public_channel_id_by_name(channel_name: str) -> str:
@@ -392,9 +410,9 @@ def get_post_message_by_unused_custom_emojis(unused_custom_emojis: dict) -> str:
 
 
 def main() -> None:
-    # inputs
     token = input("User OAuth Token: ")
-    client = WebClient(token=token)
+    init_web_client(token)
+    # only for post message
     bot_token = input("Bot User OAuth Token: ")
     bot_client = WebClient(token=bot_token)
 
